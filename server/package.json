@@ -4,13 +4,13 @@
   "description": "Tournament hosting backend for the Pixel Dungeon Heroes website: signups, brackets, live chat, admin panel.",
   "main": "server.js",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.3.0",
+    "better-sqlite3": "^13.0.3",
     "express": "^4.19.2",
     "socket.io": "^4.7.5"
   }
