@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Dungeon Heroes — JMakesGames</title>
+<meta name="description" content="Pixel Dungeon Heroes, the pixel-art dungeon crawler series by JMakesGames. Play the original 100-floor roguelite with online PvP, or dive into Pixel Dungeon Heroes 2's 200-floor sequel. Early Access September 20.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Pixel Dungeon Heroes — JMakesGames">
+<meta property="og:description" content="Two pixel-art dungeon crawlers, one series. PDH2 Early Access September 20 — Full Release October 10.">
+<meta property="og:image" content="assets/og-image.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- Favicon: pixel sword on amber, inline so the page stays a single deployable folder -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23150f1e'/%3E%3Crect x='7' y='2' width='2' height='8' fill='%23f2a341'/%3E%3Crect x='5' y='10' width='6' height='2' fill='%23a86f26'/%3E%3Crect x='7' y='12' width='2' height='3' fill='%23f2a341'/%3E%3C/svg%3E">
+
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<!-- ================= STICKY NAV ================= -->
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="brand" href="#top">JMAKESGAMES</a>
+    <div class="links" id="navLinks">
+      <a href="#pdh2" data-nav="pdh2">PDH2</a>
+      <a href="#pdh1" data-nav="pdh1">PDH1</a>
+      <a href="tournaments.html">TOURNAMENTS</a>
+      <a href="leaderboard.html">LEADERBOARD</a>
+      <a href="#about" data-nav="about">ABOUT</a>
+      <a href="#news" data-nav="news">NEWS</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= FRANCHISE HERO ================= -->
+<header class="hero" id="top">
+  <div class="embers" id="heroEmbers"></div>
+  <div class="cornerDeco tl"></div><div class="cornerDeco tr"></div>
+  <div class="cornerDeco bl"></div><div class="cornerDeco br"></div>
+
+  <div class="hero-content">
+    <div class="eyebrow">JMakesGames presents</div>
+    <h1 class="glowTitle">PIXEL DUNGEON HEROES</h1>
+    <p class="tagline">Two pixel-art dungeon crawlers. One ever-deepening dungeon.
+      <b>Pixel Dungeon Heroes 2</b> arrives in Early Access <b>September 20</b> — or start from
+      the beginning with the original, live now on itch.io.</p>
+
+    <div class="btnrow">
+      <a class="btn primary" href="#pdh2">▶ SEE PIXEL DUNGEON HEROES 2</a>
+      <a class="btn" href="https://jmakesgames.itch.io/pixel-dungeon-heroes" target="_blank" rel="noopener">PLAY THE ORIGINAL NOW</a>
+    </div>
+  </div>
+</header>
+
+<!-- ================= PDH2 ================= -->
+<section class="game-section" id="pdh2">
+  <div class="section">
+    <div class="game-header reveal">
+      <div class="eyebrow">THE SEQUEL</div>
+      <h1 class="glowTitle" style="font-size:clamp(15px,3.6vw,28px);">PIXEL DUNGEON HEROES 2</h1>
+      <p style="margin-top:14px;">The dungeon grows deadlier. 200 floors of scrolling multi-room
+        carnage, new monsters, and gear worth bleeding for.</p>
+
+      <div class="release-banner">
+        <div class="release-box">
+          <div class="tag">EARLY ACCESS</div>
+          <div class="date">SEPTEMBER 20</div>
+        </div>
+        <div class="release-box full">
+          <div class="tag">FULL RELEASE</div>
+          <div class="date">OCTOBER 10</div>
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <a class="btn primary" href="https://jmakesgames.itch.io" target="_blank" rel="noopener">🔔 FOLLOW ON ITCH.IO</a>
+      </div>
+      <span class="cta-note soon">GAME PAGE GOES LIVE SEPTEMBER 20 — FOLLOW JMAKESGAMES FOR THE LAUNCH</span>
+
+      <div class="trailer-frame">
+        <video controls preload="metadata" poster="assets/screenshots/boss-dread-monarch.jpg">
+          <source src="assets/video/pdh2-teaser.mp4" type="video/mp4">
+          Your browser doesn't support embedded video — the trailer is at assets/video/pdh2-teaser.mp4.
+        </video>
+      </div>
+    </div>
+
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="icon">🗺️</div>
+        <h3>200-Level Campaign</h3>
+        <p>Pick up at Dungeon 101 — already harder than anything Hunters faced in the first game. Push all the way to Dungeon 200.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🏛️</div>
+        <h3>Scrolling Multi-Room Dungeons</h3>
+        <p>No more fixed arenas. Real rooms connected by corridors, with a camera that follows you deeper into the dark.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">👹</div>
+        <h3>5 Brand-New Enemies</h3>
+        <p>Wraith, Goblin Shaman, Orc Berserker, Orc Champion, and Orc Warlord — plus a unique final boss, The Dread Monarch.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🏆</div>
+        <h3>22 Achievements + Tutorial</h3>
+        <p>A full achievement system with cosmetic unlocks for your Forever Name, and a guided tutorial for new Hunters.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">⚔️</div>
+        <h3>8 Local Multiplayer Bot Modes</h3>
+        <p>Ranked 1v1, Team Rooms, Capture the Flag, and more against bots at launch — live servers arrive at full release.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🛡️</div>
+        <h3>Gear Progression Shop</h3>
+        <p>Upgrade from Iron to Monarch tier across weapons, armor, shields, and helpers as the dungeon escalates.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💨</div>
+        <h3>Sprint Mechanic</h3>
+        <p>Hold Shift to dash past danger — new movement tech built for the bigger, meaner rooms of Dungeon 101+.</p>
+      </div>
+    </div>
+
+    <div class="shot-grid reveal" id="shotGridPdh2">
+      <div class="shot" data-full="assets/screenshots/dungeon-exploration.jpg">
+        <img src="assets/screenshots/dungeon-exploration.jpg" alt="Scrolling multi-room dungeon exploration" loading="lazy">
+        <div class="cap">MULTI-ROOM DUNGEONS</div>
+      </div>
+      <div class="shot" data-full="assets/screenshots/combat-new-monsters.jpg">
+        <img src="assets/screenshots/combat-new-monsters.jpg" alt="Combat against new monster types" loading="lazy">
+        <div class="cap">NEW MONSTER TYPES</div>
+      </div>
+      <div class="shot" data-full="assets/screenshots/boss-dread-monarch.jpg">
+        <img src="assets/screenshots/boss-dread-monarch.jpg" alt="The Dread Monarch boss encounter" loading="lazy">
+        <div class="cap">THE DREAD MONARCH AWAITS</div>
+      </div>
+      <div class="shot" data-full="assets/screenshots/achievements-grid.jpg">
+        <img src="assets/screenshots/achievements-grid.jpg" alt="Achievements tracking screen" loading="lazy">
+        <div class="cap">22 ACHIEVEMENTS TO EARN</div>
+      </div>
+      <div class="shot" data-full="assets/screenshots/armory-shop.jpg">
+        <img src="assets/screenshots/armory-shop.jpg" alt="The Armory gear shop screen" loading="lazy">
+        <div class="cap">IRON TO MONARCH-TIER GEAR</div>
+      </div>
+      <div class="shot" data-full="assets/screenshots/multiplayer-bots.jpg">
+        <img src="assets/screenshots/multiplayer-bots.jpg" alt="Local multiplayer bot mode combat" loading="lazy">
+        <div class="cap">8 MULTIPLAYER BOT MODES</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PDH1 ================= -->
+<section class="game-section alt" id="pdh1">
+  <div class="section">
+    <div class="game-header reveal">
+      <div class="eyebrow">WHERE IT STARTED</div>
+      <h1 class="glowTitle" style="font-size:clamp(15px,3.6vw,28px);">PIXEL DUNGEON HEROES</h1>
+      <p style="margin-top:14px;">The original 100-floor pixel-art dungeon crawler. Build your Hunter,
+        fight to the bottom, and take the fight online.</p>
+
+      <div class="btnrow">
+        <a class="btn primary" href="https://jmakesgames.itch.io/pixel-dungeon-heroes" target="_blank" rel="noopener">▶ PLAY ON ITCH.IO</a>
+      </div>
+      <span class="cta-note live">🟢 LIVE NOW — FREE TO PLAY IN YOUR BROWSER</span>
+    </div>
+
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="icon">🗝️</div>
+        <h3>100-Level Campaign</h3>
+        <p>Fight through 100 monster-infested dungeons. A boss guards every 5th floor, each one dropping a treasure chest and double gold.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">👻</div>
+        <h3>Ghosts &amp; Barriers</h3>
+        <p>Barriers block your path, but ghosts drift right through them — only a potion can banish one.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎨</div>
+        <h3>Create Your Hunter</h3>
+        <p>Name your warrior and pick a shirt color and skin tone — your look, saved for the whole campaign.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🌐</div>
+        <h3>Ranked 1v1 Online</h3>
+        <p>Beat Dungeon 10 to unlock PvP, then queue into auto-matchmade ranked duels against real players.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🚪</div>
+        <h3>Team Rooms</h3>
+        <p>Private, password-protected lobbies for playing with friends on your own terms.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🚩</div>
+        <h3>Capture the Flag</h3>
+        <p>4v4 team battles across a sprawling multi-room map. Hold both flags home to win.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎃</div>
+        <h3>Halloween Event</h3>
+        <p>Every October 13–31, a seasonal Skeleton monster stalks the dungeon and drops the exclusive Skull Sword.</p>
+      </div>
+    </div>
+
+    <div class="shot-grid reveal" id="shotGridPdh1">
+      <div class="shot" data-full="assets/screenshots/pdh1/main-menu.png">
+        <img src="assets/screenshots/pdh1/main-menu.png" alt="Pixel Dungeon Heroes main menu" loading="lazy">
+        <div class="cap">THE DUNGEON AWAITS</div>
+      </div>
+      <div class="shot" data-full="assets/screenshots/pdh1/ctf-match.png">
+        <img src="assets/screenshots/pdh1/ctf-match.png" alt="Capture the Flag multiplayer match" loading="lazy">
+        <div class="cap">4V4 CAPTURE THE FLAG</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="lightbox" id="lightbox">
+  <span class="lightbox-close" id="lightboxClose">✕</span>
+  <img id="lightboxImg" alt="">
+</div>
+
+<!-- ================= ABOUT ================= -->
+<section class="section" id="about">
+  <h2 class="reveal">ABOUT JMAKESGAMES</h2>
+  <div class="about-card reveal">
+    <div class="avatar-slot">🎮</div>
+    <!--
+      TODO(jayden): this is a first-draft bio written in what I'd guess is
+      your voice, based only on facts I actually know about the games
+      (solo dev, hand-drawn canvas art, synthesized audio, no external
+      assets, building a sequel). Edit freely — swap in real details about
+      yourself I have no way of knowing (background, location, why you
+      actually started, etc).
+    -->
+    <p>I'm the one-person show behind JMakesGames. No studio, no team —
+      just me, a code editor, and way too many hours spent tweaking pixel
+      sprites at 2am. Every sound effect in these games is synthesized from
+      scratch, every sprite is hand-drawn in canvas, and there's not a
+      single external asset file anywhere. Pixel Dungeon Heroes started as
+      a project I wasn't sure anyone would play, and somehow turned into a
+      real game with real players and a real multiplayer mode. Now I'm deep
+      in the sequel, throwing in everything I wished the first game had.
+      Thanks for checking these out — and if you run into a bug, it's
+      basically a hidden feature. (Tell me about it anyway.)</p>
+  </div>
+</section>
+
+<!-- ================= NEWS ================= -->
+<section class="section" id="news">
+  <h2 class="reveal">NEWS &amp; UPDATES</h2>
+  <div class="news-list reveal">
+    <div class="news-item">
+      <div class="news-date">OCTOBER 10, 2026<span class="news-tag">PDH2</span></div>
+      <p>Pixel Dungeon Heroes 2 Full Release — live multiplayer servers go online alongside the finished 200-floor campaign.</p>
+    </div>
+    <div class="news-item">
+      <div class="news-date">SEPTEMBER 20, 2026<span class="news-tag">PDH2</span></div>
+      <p>Pixel Dungeon Heroes 2 launches into Early Access on itch.io.</p>
+    </div>
+    <div class="news-item">
+      <div class="news-date">OCTOBER 13–31 (ANNUAL)<span class="news-tag">PDH1</span></div>
+      <p>The original's Halloween event returns every year — a seasonal Skeleton monster and the exclusive Skull Sword drop.</p>
+    </div>
+  </div>
+  <!--
+    TODO(jayden): add earlier PDH1 milestones/changelog entries yourself —
+    this list only includes dates already confirmed. Copy a .news-item
+    block above and edit the date/tag/text to add more.
+  -->
+  <p class="news-more">More updates coming as PDH2 approaches Early Access.</p>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <h1 style="font-size:clamp(13px,2.4vw,18px);">READY TO DESCEND?</h1>
+  <div class="btnrow footer-games">
+    <a class="btn primary small" href="https://jmakesgames.itch.io/pixel-dungeon-heroes" target="_blank" rel="noopener">▶ PLAY PDH1</a>
+    <a class="btn small" href="https://jmakesgames.itch.io" target="_blank" rel="noopener">🔔 FOLLOW FOR PDH2</a>
+  </div>
+  <div class="socials">
+    <!-- TODO(jayden): add Discord/Twitter/other social links here -->
+  </div>
+  <p>© 2026 JMakesGames. Pixel Dungeon Heroes &amp; Pixel Dungeon Heroes 2.</p>
+</footer>
+
+<script>
+  // Ember particle field, ported from the game's own loading/menu screens
+  (function(){
+    const container = document.getElementById('heroEmbers');
+    const COUNT = 34;
+    for(let i=0;i<COUNT;i++){
+      const e = document.createElement('span');
+      e.className='ember';
+      const left = Math.random()*100;
+      const delay = Math.random()*8;
+      const duration = 6 + Math.random()*6;
+      const drift = (Math.random()*60-30)+'px';
+      e.style.left = left+'%';
+      e.style.animationDelay = delay+'s';
+      e.style.animationDuration = duration+'s';
+      e.style.setProperty('--drift', drift);
+      container.appendChild(e);
+    }
+  })();
+
+  // Lightbox for both screenshot galleries
+  (function(){
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    document.querySelectorAll('.shot-grid').forEach(function(grid){
+      grid.addEventListener('click', function(e){
+        const shot = e.target.closest('.shot');
+        if(!shot) return;
+        lightboxImg.src = shot.getAttribute('data-full');
+        lightbox.classList.add('show');
+      });
+    });
+    function close(){ lightbox.classList.remove('show'); lightboxImg.removeAttribute('src'); }
+    document.getElementById('lightboxClose').addEventListener('click', close);
+    lightbox.addEventListener('click', function(e){ if(e.target===lightbox) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  })();
+
+  // Scroll-reveal for section blocks
+  (function(){
+    const items = document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){ items.forEach(el=>el.classList.add('in-view')); return; }
+    const io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.15, rootMargin:'0px 0px -40px 0px'});
+    items.forEach(el=>io.observe(el));
+  })();
+
+  // Active nav-link highlighting as sections scroll into view
+  (function(){
+    const sections = ['pdh2','pdh1','about','news'].map(id=>document.getElementById(id)).filter(Boolean);
+    const links = document.querySelectorAll('#navLinks a');
+    if(!('IntersectionObserver' in window) || !sections.length) return;
+    const io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          links.forEach(l=>l.classList.toggle('active', l.dataset.nav===entry.target.id));
+        }
+      });
+    }, {rootMargin:'-45% 0px -45% 0px'});
+    sections.forEach(s=>io.observe(s));
+  })();
+</script>
+
+</body>
+</html>

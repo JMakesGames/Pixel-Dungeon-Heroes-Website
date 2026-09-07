@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tournaments — Pixel Dungeon Heroes</title>
+<meta name="description" content="Community and official tournaments for Pixel Dungeon Heroes and Pixel Dungeon Heroes 2. Sign up, check the bracket, and chat with other players.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23150f1e'/%3E%3Crect x='7' y='2' width='2' height='8' fill='%23f2a341'/%3E%3Crect x='5' y='10' width='6' height='2' fill='%23a86f26'/%3E%3Crect x='7' y='12' width='2' height='3' fill='%23f2a341'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .mini-hero{padding:60px 20px 40px;text-align:center;border-bottom:2px solid var(--amber-dim);
+    background:radial-gradient(ellipse at 50% 0%, rgba(242,163,65,0.14) 0%, rgba(10,7,16,0) 60%);}
+  .mini-hero p{max-width:560px;margin:14px auto 0;}
+
+  .status-group{margin-bottom:52px;}
+  .status-group-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+  .status-group-head h2{text-align:left;margin-bottom:0;}
+  .tourney-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
+  .tourney-card{background:rgba(10,7,16,0.4);border:1px solid rgba(168,111,38,0.4);border-left:3px solid var(--amber-dim);
+    padding:20px;text-decoration:none;display:block;transition:transform .15s ease, border-color .15s ease;}
+  .tourney-card:hover{transform:translateY(-3px);border-left-color:var(--amber);}
+  .tourney-card h3{margin-bottom:6px;}
+  .tourney-card .meta{font-family:var(--font-display);font-size:8px;color:var(--ink-dim);letter-spacing:1px;margin-bottom:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .badge{font-family:var(--font-display);font-size:7px;padding:4px 7px;letter-spacing:1px;}
+  .badge.open{background:var(--leaf);color:#0c1f0c;}
+  .badge.progress{background:var(--gold);color:#3a2a00;}
+  .badge.done{background:var(--ink-dim);color:#241a33;}
+  .empty-state{text-align:center;color:var(--ink-dim);padding:40px 20px;border:2px dashed rgba(168,111,38,0.4);}
+
+  .create-toggle{max-width:460px;margin:0 auto 44px;text-align:center;}
+  #createFormWrap{max-width:520px;margin:16px auto 0;display:none;}
+  #createFormWrap.show{display:block;}
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="brand" href="index.html#top">JMAKESGAMES</a>
+    <div class="links">
+      <a href="index.html#pdh2">PDH2</a>
+      <a href="index.html#pdh1">PDH1</a>
+      <a href="tournaments.html" class="active">TOURNAMENTS</a>
+      <a href="leaderboard.html">LEADERBOARD</a>
+      <a href="index.html#about">ABOUT</a>
+      <a href="index.html#news">NEWS</a>
+    </div>
+  </div>
+</nav>
+
+<header class="mini-hero">
+  <div class="eyebrow">COMMUNITY EVENTS</div>
+  <h1 style="font-size:clamp(15px,3.6vw,26px);">TOURNAMENTS</h1>
+  <p>Sign up, check your bracket, and trash-talk in the lobby chat. Open to both Pixel Dungeon
+    Heroes and Pixel Dungeon Heroes 2 players. Matches are coordinated here, then played out
+    together in-game.</p>
+</header>
+
+<main class="section">
+  <div id="identityWidget"></div>
+
+  <div class="create-toggle">
+    <button class="btn primary" id="showCreateBtn">+ HOST YOUR OWN TOURNAMENT</button>
+  </div>
+  <div id="createFormWrap" class="form-card">
+    <h3 style="text-align:center;">CREATE A COMMUNITY TOURNAMENT</h3>
+    <p style="text-align:center;margin-bottom:16px;">Anyone can host one. These are separate from
+      JMakesGames' official tournaments and don't earn leaderboard points.</p>
+    <div class="field">
+      <label for="cName">NAME</label>
+      <input id="cName" maxlength="80" placeholder="Friday Night Skirmish">
+    </div>
+    <div class="field">
+      <label for="cGame">GAME</label>
+      <select id="cGame">
+        <option value="PDH2">Pixel Dungeon Heroes 2</option>
+        <option value="PDH1">Pixel Dungeon Heroes</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="cMax">MAX PARTICIPANTS</label>
+      <input id="cMax" type="number" min="2" max="64" value="8">
+    </div>
+    <div class="field">
+      <label for="cStarts">STARTS (free text, e.g. "Tonight, 8pm ET")</label>
+      <input id="cStarts" maxlength="40">
+    </div>
+    <div class="field">
+      <label for="cDesc">DESCRIPTION</label>
+      <textarea id="cDesc" maxlength="2000"></textarea>
+    </div>
+    <button class="btn primary" id="createBtn" style="width:100%;">CREATE</button>
+    <div class="form-error" id="createError"></div>
+  </div>
+
+  <div id="lists">
+    <p style="text-align:center;">Loading tournaments…</p>
+  </div>
+</main>
+
+<footer>
+  <p style="margin-top:0;"><a href="index.html">← Back to Pixel Dungeon Heroes</a></p>
+  <p>© 2026 JMakesGames.</p>
+</footer>
+
+<script src="assets/identity.js"></script>
+<script>
+  const STATUS_META = {
+    signups_open: { label: 'SIGNUPS OPEN', badge: 'open' },
+    in_progress: { label: 'IN PROGRESS', badge: 'progress' },
+    completed: { label: 'COMPLETED', badge: 'done' },
+    cancelled: { label: 'CANCELLED', badge: 'done' },
+  };
+
+  pdhRenderIdentityWidget(document.getElementById('identityWidget'), function () {});
+
+  document.getElementById('showCreateBtn').addEventListener('click', () => {
+    const identity = pdhGetIdentity();
+    if (!identity) {
+      alert('Pick a name above first — that\'s how the tournament will know who\'s hosting.');
+      document.getElementById('identityWidget').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    document.getElementById('createFormWrap').classList.toggle('show');
+  });
+
+  document.getElementById('createBtn').addEventListener('click', () => {
+    const identity = pdhGetIdentity();
+    const errorEl = document.getElementById('createError');
+    errorEl.textContent = '';
+    if (!identity) { errorEl.textContent = 'Pick a name first.'; return; }
+
+    fetch('/api/tournaments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Player-Token': identity.token },
+      body: JSON.stringify({
+        name: document.getElementById('cName').value,
+        game: document.getElementById('cGame').value,
+        max_participants: document.getElementById('cMax').value,
+        starts_at: document.getElementById('cStarts').value,
+        description: document.getElementById('cDesc').value,
+      }),
+    }).then(async r => {
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Could not create tournament');
+      location.href = `tournament.html?id=${data.id}`;
+    }).catch(err => { errorEl.textContent = err.message; });
+  });
+
+  function card(t) {
+    const meta = STATUS_META[t.status] || STATUS_META.completed;
+    const a = document.createElement('a');
+    a.className = 'tourney-card';
+    a.href = `tournament.html?id=${t.id}`;
+    const h3 = document.createElement('h3');
+    h3.textContent = t.name;
+    const metaRow = document.createElement('div');
+    metaRow.className = 'meta';
+    const badge = document.createElement('span');
+    badge.className = `badge ${meta.badge}`;
+    badge.textContent = meta.label;
+    const game = document.createElement('span');
+    game.textContent = t.game;
+    const count = document.createElement('span');
+    count.textContent = `${t.participant_count}/${t.max_participants} players`;
+    metaRow.append(badge, game, count);
+    if (!t.is_official && t.host_name) {
+      const host = document.createElement('span');
+      host.textContent = `hosted by ${t.host_name}`;
+      metaRow.appendChild(host);
+    }
+    const desc = document.createElement('p');
+    desc.textContent = t.description || 'No description yet.';
+    a.append(h3, metaRow, desc);
+    return a;
+  }
+
+  function renderGroup(root, title, tag, tournaments) {
+    if (!tournaments.length) return;
+    const section = document.createElement('div');
+    section.className = 'status-group';
+    const head = document.createElement('div');
+    head.className = 'status-group-head';
+    const h2 = document.createElement('h2');
+    h2.textContent = title;
+    head.appendChild(h2);
+    if (tag) {
+      const badge = document.createElement('span');
+      badge.className = tag;
+      badge.textContent = tag === 'tag-official' ? 'HOSTED BY JMAKESGAMES' : 'PLAYER-HOSTED';
+      head.appendChild(badge);
+    }
+    const grid = document.createElement('div');
+    grid.className = 'tourney-grid';
+    tournaments.forEach(t => grid.appendChild(card(t)));
+    section.append(head, grid);
+    root.appendChild(section);
+  }
+
+  fetch('/api/tournaments').then(r => {
+    if (!r.ok) throw new Error('offline');
+    return r.json();
+  }).then(tournaments => {
+    const root = document.getElementById('lists');
+    root.innerHTML = '';
+    if (!tournaments.length) {
+      root.innerHTML = '<div class="empty-state">No tournaments yet — check back soon, or host your own above.</div>';
+      return;
+    }
+    const official = tournaments.filter(t => t.is_official);
+    const community = tournaments.filter(t => !t.is_official);
+    renderGroup(root, '🏆 OFFICIAL TOURNAMENTS', 'tag-official', official);
+    renderGroup(root, 'COMMUNITY TOURNAMENTS', 'tag-community', community);
+    if (!official.length && !community.length) {
+      root.innerHTML = '<div class="empty-state">No tournaments yet — check back soon, or host your own above.</div>';
+    }
+  }).catch(() => {
+    document.getElementById('lists').innerHTML =
+      '<div class="empty-state">Couldn\'t reach the tournament server. Try again in a moment.</div>';
+  });
+</script>
+
+</body>
+</html>

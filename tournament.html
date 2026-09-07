@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tournament — Pixel Dungeon Heroes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23150f1e'/%3E%3Crect x='7' y='2' width='2' height='8' fill='%23f2a341'/%3E%3Crect x='5' y='10' width='6' height='2' fill='%23a86f26'/%3E%3Crect x='7' y='12' width='2' height='3' fill='%23f2a341'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .t-header{padding:50px 20px 34px;text-align:center;border-bottom:2px solid var(--amber-dim);
+    background:radial-gradient(ellipse at 50% 0%, rgba(242,163,65,0.14) 0%, rgba(10,7,16,0) 60%);}
+  .t-header .meta{margin-top:14px;font-family:var(--font-display);font-size:8px;color:var(--ink-dim);
+    letter-spacing:1px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center;}
+  .badge{font-family:var(--font-display);font-size:7px;padding:4px 7px;letter-spacing:1px;}
+  .badge.open{background:var(--leaf);color:#0c1f0c;}
+  .badge.progress{background:var(--gold);color:#3a2a00;}
+  .badge.done{background:var(--ink-dim);color:#241a33;}
+  .t-desc{max-width:600px;margin:16px auto 0;}
+
+  .layout{display:grid;grid-template-columns:1fr 320px;gap:32px;align-items:start;}
+  .layout > *{min-width:0;}
+  @media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+
+  /* Bracket */
+  .bracket-scroll{overflow-x:auto;padding-bottom:10px;max-width:100%;}
+  .bracket{display:flex;gap:34px;min-width:max-content;padding:6px 2px;}
+  .round-col{display:flex;flex-direction:column;justify-content:space-around;gap:16px;min-width:190px;}
+  .round-title{font-family:var(--font-display);font-size:8px;color:var(--ink-dim);letter-spacing:1px;
+    text-align:center;margin-bottom:8px;}
+  .match{border:2px solid var(--amber-dim);background:rgba(10,7,16,0.5);}
+  .slot{padding:9px 10px;font-size:15px;color:var(--ink-dim);border-bottom:1px solid rgba(168,111,38,0.3);
+    display:flex;justify-content:space-between;gap:8px;}
+  .slot:last-child{border-bottom:none;}
+  .slot.winner{color:var(--gold);background:rgba(255,213,74,0.08);}
+  .slot.bye{font-style:italic;opacity:.6;}
+  .slot-btn{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(168,111,38,0.3);
+    color:var(--ink-dim);font-family:var(--font-body);font-size:15px;padding:9px 10px;cursor:pointer;}
+  .slot-btn:last-child{border-bottom:none;}
+  .slot-btn:hover:not(:disabled){background:rgba(242,163,65,0.15);color:var(--ink);}
+  .slot-btn:disabled{cursor:default;}
+  .slot-btn.winner{color:var(--gold);background:rgba(255,213,74,0.08);}
+
+  /* Signup / side cards */
+  .side-card{background:rgba(10,7,16,0.4);border:var(--border);padding:22px;margin-bottom:20px;}
+  .side-card h3{text-align:center;margin-bottom:14px;}
+  .roster-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:16px;color:var(--ink-dim);}
+  .roster-list li{padding:4px 0;border-bottom:1px solid rgba(168,111,38,0.2);}
+
+  /* Chat */
+  .chat-log{height:260px;overflow-y:auto;background:var(--bg-deep);border:2px solid var(--amber-dim);
+    padding:10px;margin-bottom:10px;display:flex;flex-direction:column;gap:6px;}
+  .chat-msg{font-size:15px;color:var(--ink);}
+  .chat-msg .name{color:var(--amber);}
+  .chat-row{display:flex;gap:8px;}
+  .chat-row input{flex:1;}
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="brand" href="index.html#top">JMAKESGAMES</a>
+    <div class="links">
+      <a href="index.html#pdh2">PDH2</a>
+      <a href="index.html#pdh1">PDH1</a>
+      <a href="tournaments.html" class="active">TOURNAMENTS</a>
+      <a href="leaderboard.html">LEADERBOARD</a>
+      <a href="index.html#about">ABOUT</a>
+      <a href="index.html#news">NEWS</a>
+    </div>
+  </div>
+</nav>
+
+<header class="t-header" id="tHeader">
+  <div class="eyebrow">TOURNAMENT</div>
+  <h1 id="tName" style="font-size:clamp(15px,3.6vw,26px);">Loading…</h1>
+  <div class="meta" id="tMeta"></div>
+  <p class="t-desc" id="tDesc"></p>
+</header>
+
+<main class="section">
+  <div id="identityWidget" style="margin-bottom:36px;"></div>
+
+  <div class="layout">
+    <div>
+      <h2 style="text-align:left;">BRACKET</h2>
+      <div class="bracket-scroll">
+        <div class="bracket" id="bracket"><p>No bracket yet — check back once signups close.</p></div>
+      </div>
+
+      <div id="hostPanel"></div>
+    </div>
+
+    <div>
+      <div class="side-card" id="signupCard">
+        <h3>SIGN UP</h3>
+        <p style="text-align:center;">Pick a name above first.</p>
+      </div>
+
+      <div class="side-card">
+        <h3>ROSTER (<span id="rosterCount">0</span>)</h3>
+        <ul class="roster-list" id="rosterList"></ul>
+      </div>
+
+      <div class="side-card">
+        <h3>LOBBY CHAT</h3>
+        <div class="chat-log" id="chatLog"></div>
+        <div class="chat-row">
+          <input id="chatInput" maxlength="300" placeholder="Say something…" disabled>
+          <button class="btn small" id="chatSendBtn" disabled>SEND</button>
+        </div>
+        <div class="form-error" id="chatError"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p style="margin-top:0;"><a href="tournaments.html">← All tournaments</a></p>
+  <p>© 2026 JMakesGames.</p>
+</footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="assets/identity.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const tournamentId = params.get('id');
+  const STATUS_META = {
+    signups_open: { label: 'SIGNUPS OPEN', badge: 'open' },
+    in_progress: { label: 'IN PROGRESS', badge: 'progress' },
+    completed: { label: 'COMPLETED', badge: 'done' },
+    cancelled: { label: 'CANCELLED', badge: 'done' },
+  };
+
+  let isAdmin = false;
+  let currentTournament = null;
+
+  if (!tournamentId) {
+    document.getElementById('tName').textContent = 'Tournament not found';
+  }
+
+  function renderHeader(t) {
+    document.title = `${t.name} — Pixel Dungeon Heroes`;
+    document.getElementById('tName').textContent = t.name;
+    document.getElementById('tDesc').textContent = t.description || '';
+    const meta = STATUS_META[t.status] || STATUS_META.completed;
+    const metaEl = document.getElementById('tMeta');
+    metaEl.innerHTML = '';
+    const badge = document.createElement('span');
+    badge.className = `badge ${meta.badge}`;
+    badge.textContent = meta.label;
+    const tag = document.createElement('span');
+    tag.className = t.is_official ? 'tag-official' : 'tag-community';
+    tag.textContent = t.is_official ? '🏆 OFFICIAL' : `PLAYER-HOSTED${t.host_name ? ' by ' + t.host_name : ''}`;
+    const game = document.createElement('span');
+    game.textContent = t.game;
+    const count = document.createElement('span');
+    count.textContent = `${t.participant_count}/${t.max_participants} players`;
+    metaEl.append(badge, tag, game, count);
+  }
+
+  function renderRoster(t) {
+    document.getElementById('rosterCount').textContent = t.participants.length;
+    const list = document.getElementById('rosterList');
+    list.innerHTML = '';
+    if (!t.participants.length) {
+      const li = document.createElement('li');
+      li.textContent = 'No one has signed up yet — be the first.';
+      list.appendChild(li);
+      return;
+    }
+    t.participants.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = p.display_name;
+      list.appendChild(li);
+    });
+  }
+
+  function renderSignup(t) {
+    const card = document.getElementById('signupCard');
+    const identity = pdhGetIdentity();
+    if (!identity) {
+      card.innerHTML = '<h3>SIGN UP</h3><p style="text-align:center;">Pick a name above first.</p>';
+      return;
+    }
+    const iAmIn = t.participants.some(p => p.player_id === identity.id);
+    if (iAmIn) {
+      card.innerHTML = `<h3>YOU'RE IN</h3><p style="text-align:center;">Registered as <b style="color:var(--gold);">${pdhEscape(identity.name)}</b>. Good luck.</p>`;
+      return;
+    }
+    if (t.status !== 'signups_open') {
+      card.innerHTML = '<h3>SIGN UP</h3><p style="text-align:center;">Signups are closed for this tournament.</p>';
+      return;
+    }
+    if (t.participant_count >= t.max_participants) {
+      card.innerHTML = '<h3>SIGN UP</h3><p style="text-align:center;">This tournament is full.</p>';
+      return;
+    }
+    card.innerHTML = `
+      <h3>SIGN UP</h3>
+      <p style="text-align:center;margin-bottom:14px;">Joining as <b style="color:var(--gold);">${pdhEscape(identity.name)}</b></p>
+      <div class="field">
+        <label for="contactInput">CONTACT (OPTIONAL)</label>
+        <input id="contactInput" maxlength="120" placeholder="Discord, itch.io username…">
+      </div>
+      <button class="btn primary" id="signupBtn" style="width:100%;">JOIN TOURNAMENT</button>
+      <div class="form-error" id="signupError"></div>`;
+    document.getElementById('signupBtn').addEventListener('click', () => {
+      const errorEl = document.getElementById('signupError');
+      errorEl.textContent = '';
+      fetch(`/api/tournaments/${tournamentId}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Player-Token': identity.token },
+        body: JSON.stringify({ contact: document.getElementById('contactInput').value.trim() }),
+      }).then(async r => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Signup failed');
+        loadTournament();
+      }).catch(err => { errorEl.textContent = err.message; });
+    });
+  }
+
+  function renderBracket(container, t, opts) {
+    container.innerHTML = '';
+    if (!t.matches.length) {
+      container.innerHTML = '<p>No bracket yet — check back once signups close.</p>';
+      return;
+    }
+    const byId = {};
+    t.participants.forEach(p => byId[p.id] = p.display_name);
+    const rounds = {};
+    t.matches.forEach(m => { (rounds[m.round] = rounds[m.round] || []).push(m); });
+    const roundNumbers = Object.keys(rounds).map(Number).sort((a, b) => a - b);
+    const totalRounds = roundNumbers.length;
+
+    const bracket = document.createElement('div');
+    bracket.className = 'bracket';
+    roundNumbers.forEach(rn => {
+      const col = document.createElement('div');
+      col.className = 'round-col';
+      const title = document.createElement('div');
+      title.className = 'round-title';
+      title.textContent = rn === totalRounds ? 'FINAL' : (rn === totalRounds - 1 ? 'SEMIFINAL' : `ROUND ${rn}`);
+      col.appendChild(title);
+
+      rounds[rn].sort((a, b) => a.slot - b.slot).forEach(m => {
+        const box = document.createElement('div');
+        box.className = 'match';
+        [m.participant1_id, m.participant2_id].forEach(pid => {
+          const label = pid === null ? (m.status === 'done' ? 'BYE' : 'TBD') : (byId[pid] || `#${pid}`);
+          if (opts && opts.manage) {
+            const btn = document.createElement('button');
+            btn.className = 'slot-btn';
+            const canPick = m.status === 'ready' && pid !== null;
+            btn.disabled = !canPick;
+            btn.textContent = label;
+            if (m.winner_id === pid) btn.classList.add('winner');
+            if (canPick) btn.addEventListener('click', () => opts.onPick(m.id, pid));
+            box.appendChild(btn);
+          } else {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            if (pid === null) slot.classList.add('bye');
+            slot.textContent = label;
+            if (m.winner_id === pid) slot.classList.add('winner');
+            box.appendChild(slot);
+          }
+        });
+        col.appendChild(box);
+      });
+      bracket.appendChild(col);
+    });
+    container.appendChild(bracket);
+  }
+
+  function renderHostPanel(t) {
+    const panel = document.getElementById('hostPanel');
+    const identity = pdhGetIdentity();
+    const iAmHost = identity && t.host_player_id === identity.id;
+    if (!isAdmin && !iAmHost) { panel.innerHTML = ''; return; }
+
+    const authHeaders = isAdmin ? {} : { 'X-Player-Token': identity.token };
+
+    if (t.status === 'signups_open') {
+      panel.innerHTML = `
+        <div class="host-panel">
+          <h3>${isAdmin ? 'ADMIN' : 'HOST'} CONTROLS</h3>
+          <p style="margin-bottom:12px;">You're managing this tournament.
+            ${t.participant_count < 2 ? 'Need at least 2 signups before starting.' : 'Ready to lock the roster and generate the bracket?'}</p>
+          <button class="btn primary small" id="startBtn" ${t.participant_count < 2 ? 'disabled' : ''}>START TOURNAMENT</button>
+          <div class="form-error" id="hostError"></div>
+        </div>`;
+      document.getElementById('startBtn').addEventListener('click', () => {
+        fetch(`/api/tournaments/${tournamentId}/start`, { method: 'POST', headers: authHeaders })
+          .then(async r => {
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.error || 'Could not start');
+            loadTournament();
+          }).catch(err => { document.getElementById('hostError').textContent = err.message; });
+      });
+    } else if (t.status === 'in_progress') {
+      panel.innerHTML = `
+        <div class="host-panel">
+          <h3>${isAdmin ? 'ADMIN' : 'HOST'} CONTROLS</h3>
+          <p style="margin-bottom:12px;">Click a name below to advance them to the next round.</p>
+          <div id="hostBracket"></div>
+          <div class="form-error" id="hostError"></div>
+        </div>`;
+      renderBracket(document.getElementById('hostBracket'), t, {
+        manage: true,
+        onPick: (matchId, winnerId) => {
+          fetch(`/api/matches/${matchId}/winner`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeaders },
+            body: JSON.stringify({ winner_id: winnerId }),
+          }).then(async r => {
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.error || 'Could not set winner');
+            loadTournament();
+          }).catch(err => { document.getElementById('hostError').textContent = err.message; });
+        },
+      });
+    } else {
+      panel.innerHTML = '';
+    }
+  }
+
+  function loadTournament() {
+    fetch(`/api/tournaments/${tournamentId}`).then(r => {
+      if (!r.ok) throw new Error('not found');
+      return r.json();
+    }).then(t => {
+      currentTournament = t;
+      renderHeader(t);
+      renderRoster(t);
+      renderSignup(t);
+      renderBracket(document.getElementById('bracket'), t, null);
+      renderHostPanel(t);
+    }).catch(() => {
+      document.getElementById('tName').textContent = 'Tournament not found';
+    });
+  }
+
+  // ---- Identity + live updates ----
+  const socket = io();
+  pdhRenderIdentityWidget(document.getElementById('identityWidget'), function () {
+    // Re-render signup/chat state once an identity exists or on every load.
+    const identity = pdhGetIdentity();
+    document.getElementById('chatInput').disabled = !identity;
+    document.getElementById('chatSendBtn').disabled = !identity;
+    if (currentTournament) { renderSignup(currentTournament); renderHostPanel(currentTournament); }
+  });
+
+  fetch('/api/admin/whoami').then(r => r.json()).then(d => {
+    isAdmin = !!d.loggedIn;
+    if (currentTournament) renderHostPanel(currentTournament);
+  }).catch(() => {});
+
+  socket.on('connect', () => socket.emit('join', { tournamentId }));
+  socket.on('roster:update', loadTournament);
+  socket.on('bracket:update', loadTournament);
+
+  // ---- Chat ----
+  const chatLog = document.getElementById('chatLog');
+  function appendChatMessage(msg) {
+    const row = document.createElement('div');
+    row.className = 'chat-msg';
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = msg.display_name + ': ';
+    const text = document.createElement('span');
+    text.textContent = msg.message;
+    row.append(name, text);
+    chatLog.appendChild(row);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+  socket.on('chat:history', history => { chatLog.innerHTML = ''; history.forEach(appendChatMessage); });
+  socket.on('chat:new', appendChatMessage);
+
+  function sendChat() {
+    const identity = pdhGetIdentity();
+    if (!identity) return;
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+    socket.emit('chat:send', { tournamentId, token: identity.token, message });
+    input.value = '';
+  }
+  document.getElementById('chatSendBtn').addEventListener('click', sendChat);
+  document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+
+  const initialIdentity = pdhGetIdentity();
+  document.getElementById('chatInput').disabled = !initialIdentity;
+  document.getElementById('chatSendBtn').disabled = !initialIdentity;
+
+  loadTournament();
+</script>
+
+</body>
+</html>

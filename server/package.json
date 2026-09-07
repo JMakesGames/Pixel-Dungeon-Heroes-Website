@@ -1,0 +1,17 @@
+{
+  "name": "pdh-tournaments-server",
+  "version": "1.0.0",
+  "description": "Tournament hosting backend for the Pixel Dungeon Heroes website: signups, brackets, live chat, admin panel.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

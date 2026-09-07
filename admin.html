@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tournament Admin — JMakesGames</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23150f1e'/%3E%3Crect x='7' y='2' width='2' height='8' fill='%23f2a341'/%3E%3Crect x='5' y='10' width='6' height='2' fill='%23a86f26'/%3E%3Crect x='7' y='12' width='2' height='3' fill='%23f2a341'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .admin-header{padding:40px 20px 24px;text-align:center;border-bottom:2px solid var(--amber-dim);}
+  .admin-header .btnrow{margin-top:16px;}
+  #loginScreen{max-width:400px;margin:80px auto;}
+  #dashboard{display:none;}
+
+  .t-row{background:rgba(10,7,16,0.4);border:1px solid rgba(168,111,38,0.4);border-left:3px solid var(--amber-dim);
+    padding:20px;margin-bottom:18px;}
+  .t-row-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .t-row-head h3{margin:0;}
+  .badge{font-family:var(--font-display);font-size:7px;padding:4px 7px;letter-spacing:1px;}
+  .badge.open{background:var(--leaf);color:#0c1f0c;}
+  .badge.progress{background:var(--gold);color:#3a2a00;}
+  .badge.done{background:var(--ink-dim);color:#241a33;}
+  .t-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+
+  .roster-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:15px;}
+  .roster-table th, .roster-table td{text-align:left;padding:6px 8px;border-bottom:1px solid rgba(168,111,38,0.25);}
+  .roster-table th{font-family:var(--font-display);font-size:7px;color:var(--ink-dim);letter-spacing:1px;}
+
+  .bracket{display:flex;gap:24px;overflow-x:auto;padding:12px 2px;margin-top:12px;}
+  .round-col{display:flex;flex-direction:column;justify-content:space-around;gap:14px;min-width:220px;}
+  .round-title{font-family:var(--font-display);font-size:8px;color:var(--ink-dim);letter-spacing:1px;text-align:center;}
+  .match{border:2px solid var(--amber-dim);background:rgba(10,7,16,0.5);}
+  .slot-btn{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(168,111,38,0.3);
+    color:var(--ink-dim);font-family:var(--font-body);font-size:15px;padding:8px 10px;cursor:pointer;}
+  .slot-btn:last-child{border-bottom:none;}
+  .slot-btn:hover:not(:disabled){background:rgba(242,163,65,0.15);color:var(--ink);}
+  .slot-btn:disabled{cursor:default;}
+  .slot-btn.winner{color:var(--gold);background:rgba(255,213,74,0.08);}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="eyebrow">JMAKESGAMES</div>
+  <h1 style="font-size:clamp(14px,3vw,22px);">TOURNAMENT ADMIN</h1>
+  <div class="btnrow hidden" id="logoutRow">
+    <button class="btn small" id="logoutBtn">LOG OUT</button>
+  </div>
+</header>
+
+<main class="section">
+  <div id="loginScreen" class="form-card">
+    <h3 style="text-align:center;">ADMIN LOGIN</h3>
+    <div class="field">
+      <label for="passwordInput">PASSWORD</label>
+      <input id="passwordInput" type="password">
+    </div>
+    <button class="btn primary" id="loginBtn" style="width:100%;">LOG IN</button>
+    <div class="form-error" id="loginError"></div>
+  </div>
+
+  <div id="dashboard">
+    <div class="form-card" style="max-width:640px;margin-bottom:44px;">
+      <h3 style="text-align:center;">CREATE TOURNAMENT</h3>
+      <div class="field">
+        <label for="nName">NAME</label>
+        <input id="nName" maxlength="80" placeholder="PDH2 Fall Duels">
+      </div>
+      <div class="field">
+        <label for="nGame">GAME</label>
+        <select id="nGame">
+          <option value="PDH2">Pixel Dungeon Heroes 2</option>
+          <option value="PDH1">Pixel Dungeon Heroes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="nMax">MAX PARTICIPANTS</label>
+        <input id="nMax" type="number" min="2" max="64" value="16">
+      </div>
+      <div class="field">
+        <label for="nStarts">STARTS (free text, e.g. "Sept 20, 7pm ET")</label>
+        <input id="nStarts" maxlength="40">
+      </div>
+      <div class="field">
+        <label for="nDesc">DESCRIPTION</label>
+        <textarea id="nDesc" maxlength="2000"></textarea>
+      </div>
+      <button class="btn primary" id="createBtn" style="width:100%;">CREATE</button>
+      <div class="form-error" id="createError"></div>
+    </div>
+
+    <h2 style="text-align:left;">ALL TOURNAMENTS</h2>
+    <div id="tourneyList"></div>
+  </div>
+</main>
+
+<script>
+  const STATUS_META = {
+    signups_open: { label: 'SIGNUPS OPEN', badge: 'open' },
+    in_progress: { label: 'IN PROGRESS', badge: 'progress' },
+    completed: { label: 'COMPLETED', badge: 'done' },
+    cancelled: { label: 'CANCELLED', badge: 'done' },
+  };
+
+  async function api(url, opts = {}) {
+    const res = await fetch(url, {
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      ...opts,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  }
+
+  function showDashboard(show) {
+    document.getElementById('loginScreen').classList.toggle('hidden', show);
+    document.getElementById('dashboard').style.display = show ? 'block' : 'none';
+    document.getElementById('logoutRow').classList.toggle('hidden', !show);
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const password = document.getElementById('passwordInput').value;
+    const errorEl = document.getElementById('loginError');
+    errorEl.textContent = '';
+    try {
+      await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ password }) });
+      showDashboard(true);
+      loadTournaments();
+    } catch (err) {
+      errorEl.textContent = err.message;
+    }
+  });
+  document.getElementById('passwordInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await api('/api/admin/logout', { method: 'POST' });
+    showDashboard(false);
+  });
+
+  document.getElementById('createBtn').addEventListener('click', async () => {
+    const errorEl = document.getElementById('createError');
+    errorEl.textContent = '';
+    try {
+      await api('/api/admin/tournaments', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: document.getElementById('nName').value,
+          game: document.getElementById('nGame').value,
+          max_participants: document.getElementById('nMax').value,
+          starts_at: document.getElementById('nStarts').value,
+          description: document.getElementById('nDesc').value,
+        }),
+      });
+      document.getElementById('nName').value = '';
+      document.getElementById('nDesc').value = '';
+      document.getElementById('nStarts').value = '';
+      loadTournaments();
+    } catch (err) {
+      errorEl.textContent = err.message;
+    }
+  });
+
+  function renderBracket(container, t) {
+    container.innerHTML = '';
+    if (!t.matches.length) return;
+    const byId = {};
+    t.participants.forEach(p => byId[p.id] = p.display_name);
+    const rounds = {};
+    t.matches.forEach(m => { (rounds[m.round] = rounds[m.round] || []).push(m); });
+    const roundNumbers = Object.keys(rounds).map(Number).sort((a, b) => a - b);
+    const totalRounds = roundNumbers.length;
+
+    const bracket = document.createElement('div');
+    bracket.className = 'bracket';
+    roundNumbers.forEach(rn => {
+      const col = document.createElement('div');
+      col.className = 'round-col';
+      const title = document.createElement('div');
+      title.className = 'round-title';
+      title.textContent = rn === totalRounds ? 'FINAL' : (rn === totalRounds - 1 ? 'SEMIFINAL' : `ROUND ${rn}`);
+      col.appendChild(title);
+
+      rounds[rn].sort((a, b) => a.slot - b.slot).forEach(m => {
+        const box = document.createElement('div');
+        box.className = 'match';
+        [m.participant1_id, m.participant2_id].forEach(pid => {
+          const btn = document.createElement('button');
+          btn.className = 'slot-btn';
+          const canPick = m.status === 'ready' && pid !== null;
+          btn.disabled = !canPick;
+          btn.textContent = pid === null ? (m.status === 'done' ? 'BYE' : 'TBD') : (byId[pid] || `#${pid}`);
+          if (m.winner_id === pid) btn.classList.add('winner');
+          if (canPick) {
+            btn.addEventListener('click', async () => {
+              try {
+                await api(`/api/matches/${m.id}/winner`, {
+                  method: 'POST',
+                  body: JSON.stringify({ winner_id: pid }),
+                });
+                loadTournaments();
+              } catch (err) {
+                alert(err.message);
+              }
+            });
+          }
+          box.appendChild(btn);
+        });
+        col.appendChild(box);
+      });
+      bracket.appendChild(col);
+    });
+    container.appendChild(bracket);
+  }
+
+  async function renderRow(t) {
+    const row = document.createElement('div');
+    row.className = 't-row';
+
+    const head = document.createElement('div');
+    head.className = 't-row-head';
+    const h3 = document.createElement('h3');
+    h3.textContent = t.name;
+    const badge = document.createElement('span');
+    const meta = STATUS_META[t.status] || STATUS_META.completed;
+    badge.className = `badge ${meta.badge}`;
+    badge.textContent = meta.label;
+    const originTag = document.createElement('span');
+    originTag.className = t.is_official ? 'tag-official' : 'tag-community';
+    originTag.textContent = t.is_official ? 'OFFICIAL' : 'COMMUNITY';
+    head.append(h3, badge, originTag);
+    row.appendChild(head);
+
+    const info = document.createElement('p');
+    info.textContent = `${t.game} · ${t.participant_count}/${t.max_participants} players${t.starts_at ? ' · ' + t.starts_at : ''}${t.host_name ? ' · hosted by ' + t.host_name : ''}`;
+    row.appendChild(info);
+
+    const actions = document.createElement('div');
+    actions.className = 't-actions';
+
+    const viewLink = document.createElement('a');
+    viewLink.className = 'btn small';
+    viewLink.href = `tournament.html?id=${t.id}`;
+    viewLink.target = '_blank';
+    viewLink.textContent = 'VIEW PUBLIC PAGE';
+    actions.appendChild(viewLink);
+
+    if (t.status === 'signups_open') {
+      const startBtn = document.createElement('button');
+      startBtn.className = 'btn small primary';
+      startBtn.textContent = 'START TOURNAMENT';
+      startBtn.addEventListener('click', async () => {
+        try {
+          await api(`/api/tournaments/${t.id}/start`, { method: 'POST' });
+          loadTournaments();
+        } catch (err) { alert(err.message); }
+      });
+      actions.appendChild(startBtn);
+    }
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn small';
+    deleteBtn.style.color = 'var(--blood)';
+    deleteBtn.textContent = 'DELETE';
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm(`Delete "${t.name}"? This cannot be undone.`)) return;
+      await api(`/api/tournaments/${t.id}`, { method: 'DELETE' });
+      loadTournaments();
+    });
+    actions.appendChild(deleteBtn);
+
+    row.appendChild(actions);
+
+    const rosterTitle = document.createElement('h3');
+    rosterTitle.style.marginTop = '18px';
+    rosterTitle.textContent = 'SIGNUPS';
+    row.appendChild(rosterTitle);
+
+    const participants = await api(`/api/tournaments/${t.id}/roster`);
+    if (!participants.length) {
+      const p = document.createElement('p');
+      p.textContent = 'No signups yet.';
+      row.appendChild(p);
+    } else {
+      const table = document.createElement('table');
+      table.className = 'roster-table';
+      table.innerHTML = '<tr><th>Name</th><th>Contact</th></tr>';
+      participants.forEach(p => {
+        const tr = document.createElement('tr');
+        const tdName = document.createElement('td');
+        tdName.textContent = p.display_name;
+        const tdContact = document.createElement('td');
+        tdContact.textContent = p.contact || '—';
+        tr.append(tdName, tdContact);
+        table.appendChild(tr);
+      });
+      row.appendChild(table);
+    }
+
+    if (t.status === 'in_progress' || t.status === 'completed') {
+      const bracketTitle = document.createElement('h3');
+      bracketTitle.style.marginTop = '18px';
+      bracketTitle.textContent = 'BRACKET (click a name to advance them)';
+      row.appendChild(bracketTitle);
+      const bracketContainer = document.createElement('div');
+      row.appendChild(bracketContainer);
+      renderBracket(bracketContainer, t);
+    }
+
+    return row;
+  }
+
+  async function loadTournaments() {
+    const list = document.getElementById('tourneyList');
+    const tournaments = await api('/api/tournaments');
+    list.innerHTML = '';
+    if (!tournaments.length) {
+      list.innerHTML = '<p>No tournaments created yet.</p>';
+      return;
+    }
+    for (const t of tournaments) {
+      const detail = await api(`/api/tournaments/${t.id}`);
+      list.appendChild(await renderRow(detail));
+    }
+  }
+
+  (async function init() {
+    try {
+      const { loggedIn } = await api('/api/admin/whoami');
+      if (loggedIn) { showDashboard(true); loadTournaments(); }
+    } catch {}
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaderboard — Pixel Dungeon Heroes</title>
+<meta name="description" content="Points leaderboard for JMakesGames' official Pixel Dungeon Heroes tournaments.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23150f1e'/%3E%3Crect x='7' y='2' width='2' height='8' fill='%23f2a341'/%3E%3Crect x='5' y='10' width='6' height='2' fill='%23a86f26'/%3E%3Crect x='7' y='12' width='2' height='3' fill='%23f2a341'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .mini-hero{padding:60px 20px 40px;text-align:center;border-bottom:2px solid var(--amber-dim);
+    background:radial-gradient(ellipse at 50% 0%, rgba(242,163,65,0.14) 0%, rgba(10,7,16,0) 60%);}
+  .mini-hero p{max-width:600px;margin:14px auto 0;}
+  .points-key{max-width:700px;margin:0 auto 40px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+  .points-key span{font-family:var(--font-display);font-size:7px;letter-spacing:1px;color:var(--ink-dim);
+    border:1px solid rgba(168,111,38,0.4);padding:6px 10px;}
+  .points-key b{color:var(--gold);}
+  .empty-state{text-align:center;color:var(--ink-dim);padding:40px 20px;border:2px dashed rgba(168,111,38,0.4);max-width:700px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="brand" href="index.html#top">JMAKESGAMES</a>
+    <div class="links">
+      <a href="index.html#pdh2">PDH2</a>
+      <a href="index.html#pdh1">PDH1</a>
+      <a href="tournaments.html">TOURNAMENTS</a>
+      <a href="leaderboard.html" class="active">LEADERBOARD</a>
+      <a href="index.html#about">ABOUT</a>
+      <a href="index.html#news">NEWS</a>
+    </div>
+  </div>
+</nav>
+
+<header class="mini-hero">
+  <div class="eyebrow">OFFICIAL STANDINGS</div>
+  <h1 style="font-size:clamp(15px,3.6vw,26px);">LEADERBOARD</h1>
+  <p>Points earned in JMakesGames' official tournaments only — community-hosted tournaments don't
+    count here.</p>
+</header>
+
+<main class="section">
+  <div class="points-key">
+    <span>1st: <b>100</b></span>
+    <span>2nd: <b>75</b></span>
+    <span>3rd-4th: <b>50</b></span>
+    <span>5th-8th: <b>25</b></span>
+    <span>9th-16th: <b>15</b></span>
+    <span>17th-32nd: <b>8</b></span>
+    <span>33rd-64th: <b>1</b></span>
+  </div>
+
+  <div id="leaderboardRoot">
+    <p style="text-align:center;">Loading…</p>
+  </div>
+</main>
+
+<footer>
+  <p style="margin-top:0;"><a href="tournaments.html">← All tournaments</a></p>
+  <p>© 2026 JMakesGames.</p>
+</footer>
+
+<script>
+  fetch('/api/leaderboard').then(r => r.json()).then(rows => {
+    const root = document.getElementById('leaderboardRoot');
+    if (!rows.length) {
+      root.innerHTML = '<div class="empty-state">No official tournaments have finished yet — check back once one wraps up.</div>';
+      return;
+    }
+    const table = document.createElement('table');
+    table.className = 'leader-table';
+    table.innerHTML = '<tr><th>#</th><th>Player</th><th>Points</th><th>Wins</th></tr>';
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      const tdRank = document.createElement('td');
+      tdRank.className = 'rank';
+      tdRank.textContent = `#${i + 1}`;
+      const tdName = document.createElement('td');
+      tdName.textContent = r.name;
+      const tdPoints = document.createElement('td');
+      tdPoints.textContent = r.total_points;
+      const tdWins = document.createElement('td');
+      tdWins.textContent = r.wins;
+      tr.append(tdRank, tdName, tdPoints, tdWins);
+      table.appendChild(tr);
+    });
+    root.innerHTML = '';
+    root.appendChild(table);
+  }).catch(() => {
+    document.getElementById('leaderboardRoot').innerHTML =
+      '<div class="empty-state">Couldn\'t reach the tournament server. Try again in a moment.</div>';
+  });
+</script>
+
+</body>
+</html>
