@@ -357,13 +357,19 @@ io.on('connection', socket => {
   socket.on('chat:send', ({ tournamentId, token, message }) => {
     if (!tournamentId || !message || !token) return;
     const last = chatRateLimit.get(socket.id) || 0;
-    if (Date.now() - last < 1200) return; // basic spam guard
+    if (Date.now() - last < 1200) {
+      socket.emit('chat:error', { reason: 'rate_limited', message: "You're sending messages too fast — wait a moment." });
+      return;
+    }
     chatRateLimit.set(socket.id, Date.now());
 
     // Look up the sender's name server-side from their claim token — never
     // trust a client-supplied display name, or anyone could chat as anyone.
     const player = db.prepare('SELECT * FROM players WHERE token = ?').get(token);
-    if (!player) return;
+    if (!player) {
+      socket.emit('chat:error', { reason: 'invalid_identity', message: "Your session isn't recognized anymore — please re-claim your name." });
+      return;
+    }
 
     const text = String(message).trim().slice(0, 300);
     if (!text) return;

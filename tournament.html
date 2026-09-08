@@ -214,6 +214,21 @@
         body: JSON.stringify({ contact: document.getElementById('contactInput').value.trim() }),
       }).then(async r => {
         const data = await r.json();
+        if (r.status === 401) {
+          // Our saved identity token isn't recognized server-side (e.g. the
+          // server's database was reset since we claimed it) — clear it and
+          // show the claim form again instead of leaving a confusing error
+          // on a button that looks like it should work.
+          localStorage.removeItem(PDH_IDENTITY_KEY);
+          errorEl.textContent = "Your session wasn't recognized — please re-claim your name above and try again.";
+          pdhRenderIdentityWidget(document.getElementById('identityWidget'), function () {
+            const freshIdentity = pdhGetIdentity();
+            document.getElementById('chatInput').disabled = !freshIdentity;
+            document.getElementById('chatSendBtn').disabled = !freshIdentity;
+            if (currentTournament) { renderSignup(currentTournament); renderHostPanel(currentTournament); }
+          });
+          return;
+        }
         if (!r.ok) throw new Error(data.error || 'Signup failed');
         loadTournament();
       }).catch(err => { errorEl.textContent = err.message; });
@@ -376,6 +391,24 @@
   }
   socket.on('chat:history', history => { chatLog.innerHTML = ''; history.forEach(appendChatMessage); });
   socket.on('chat:new', appendChatMessage);
+  socket.on('chat:error', err => {
+    document.getElementById('chatError').textContent = err.message || 'Message failed to send.';
+    if (err.reason === 'invalid_identity') {
+      // Our saved identity no longer exists server-side (e.g. the server's
+      // database was reset) — drop it and show the claim form again so the
+      // same name can be re-claimed right away instead of silently failing
+      // on every future action.
+      localStorage.removeItem(PDH_IDENTITY_KEY);
+      document.getElementById('chatInput').disabled = true;
+      document.getElementById('chatSendBtn').disabled = true;
+      pdhRenderIdentityWidget(document.getElementById('identityWidget'), function () {
+        const identity = pdhGetIdentity();
+        document.getElementById('chatInput').disabled = !identity;
+        document.getElementById('chatSendBtn').disabled = !identity;
+        if (currentTournament) { renderSignup(currentTournament); renderHostPanel(currentTournament); }
+      });
+    }
+  });
 
   function sendChat() {
     const identity = pdhGetIdentity();
@@ -383,6 +416,7 @@
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
     if (!message) return;
+    document.getElementById('chatError').textContent = '';
     socket.emit('chat:send', { tournamentId, token: identity.token, message });
     input.value = '';
   }

@@ -22,6 +22,18 @@ function pdhRenderIdentityWidget(container, onReady) {
         <p class="signed-in">Playing as <b>${pdhEscape(identity.name)}</b></p>
       </div>`;
     onReady(identity);
+    // The server's database can be reset independently of the browser (e.g. a
+    // host restart) — if that happened, this token is now orphaned even
+    // though it's still sitting in localStorage. Verify in the background so
+    // a stale identity doesn't silently fail every action; if it's gone,
+    // clear it and drop back to the claim form so the same name can be
+    // re-claimed immediately.
+    fetch('/api/players/me', { headers: { 'X-Player-Token': identity.token } })
+      .then(r => { if (!r.ok) throw new Error('stale'); })
+      .catch(() => {
+        localStorage.removeItem(PDH_IDENTITY_KEY);
+        pdhRenderIdentityWidget(container, onReady);
+      });
     return;
   }
 
