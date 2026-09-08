@@ -25,18 +25,31 @@ since this repo already has its own.)
 5. **Environment Variables** — add:
    - `ADMIN_PASSWORD` = a real password (never reuse the one from local testing/`.env`)
    - `NODE_ENV` = `production`
+   - `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` — see below. Without these, the
+     server falls back to a local SQLite file, which **will get wiped** on Render's
+     free tier (see below).
    - Render sets `PORT` automatically — don't set it yourself.
 6. Deploy. Your site (marketing pages + `/tournaments.html` + `/admin.html`) will
    be live at the `.onrender.com` URL Render gives you.
 
-## Important: data persistence
+## Data persistence (Turso)
 
-Tournament data lives in a SQLite file (`server/data.db`) on the service's local
-disk. **Render's free tier has an ephemeral filesystem** — it resets on every
-redeploy and on periodic restarts, silently wiping all tournaments, signups, and
-chat history. Fine for testing; if you want tournament data to survive real use,
-add a Render persistent disk (paid) mounted at the `server/` directory, or move to
-a real hosted database later.
+Render's free tier has an ephemeral filesystem — it resets on every redeploy and
+on periodic restarts, silently wiping any local file. The database was migrated
+to [Turso](https://turso.tech) (a free hosted SQLite-compatible database) to fix
+this. To set it up:
+
+1. Sign up at [turso.tech](https://turso.tech) (free tier is generous for this).
+2. Create a database (via their dashboard or the `turso` CLI).
+3. Get its connection URL and an auth token from the dashboard.
+4. In Render's Environment Variables, add:
+   - `TURSO_DATABASE_URL` = the `libsql://...` URL from Turso
+   - `TURSO_AUTH_TOKEN` = the auth token from Turso
+5. Redeploy. From then on, tournament data survives restarts/redeploys.
+
+Locally, leave these two unset — `server/db.js` automatically falls back to a
+plain local `data.db` file when they're not present, so local dev needs no Turso
+account at all.
 
 ## Updating the site later
 

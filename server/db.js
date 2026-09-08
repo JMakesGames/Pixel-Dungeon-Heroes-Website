@@ -1,12 +1,16 @@
 const path = require('path');
 const crypto = require('crypto');
-const Database = require('better-sqlite3');
+const { createClient } = require('@libsql/client');
 
-const db = new Database(path.join(__dirname, 'data.db'));
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+// In production, TURSO_DATABASE_URL (+ TURSO_AUTH_TOKEN) points at a real
+// Turso cloud database, so data survives host restarts/redeploys. Locally,
+// with those unset, this falls back to a plain local SQLite file -- same
+// client, same API, zero code differences between the two.
+const url = process.env.TURSO_DATABASE_URL || `file:${path.join(__dirname, 'data.db')}`;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+const client = createClient(authToken ? { url, authToken } : { url });
 
-db.exec(`
+const SCHEMA = `
   -- A claimed, permanent, site-wide identity. No password: whoever holds the
   -- token in their browser "is" this player. Name is unique (case-insensitive)
   -- and never changes once claimed.
@@ -77,10 +81,65 @@ db.exec(`
     token TEXT PRIMARY KEY,
     expires_at INTEGER NOT NULL
   );
-`);
+`;
+
+// executeMultiple() is required here, not execute() -- execute() with a
+// multi-statement string silently only runs the first statement and drops
+// the rest with no error, which was confirmed by hand before relying on it.
+let ready = null;
+function init() {
+  if (!ready) {
+    ready = client.execute('PRAGMA foreign_keys = ON')
+      .then(() => client.executeMultiple(SCHEMA));
+  }
+  return ready;
+}
+
+// Thin async helpers shaped like better-sqlite3's prepare().get/all/run, so
+// call sites read the same way even though everything here is a network
+// round trip. lastInsertRowid comes back from libsql as a BigInt, which
+// can't be JSON.stringify'd directly -- always convert to Number here so
+// nothing downstream has to remember to do it.
+async function dbGet(sql, args = []) {
+  await init();
+  const result = await client.execute({ sql, args });
+  return result.rows[0] || null;
+}
+async function dbAll(sql, args = []) {
+  await init();
+  const result = await client.execute({ sql, args });
+  return result.rows;
+}
+async function dbRun(sql, args = []) {
+  await init();
+  const result = await client.execute({ sql, args });
+  return { lastInsertRowid: Number(result.lastInsertRowid ?? 0), changes: result.rowsAffected };
+}
+
+/** Runs `fn` against a set of transaction-scoped get/all/run helpers, committing on success and rolling back on any throw. */
+async function withTransaction(fn) {
+  await init();
+  const tx = await client.transaction('write');
+  try {
+    const scoped = {
+      get: async (sql, args = []) => (await tx.execute({ sql, args })).rows[0] || null,
+      all: async (sql, args = []) => (await tx.execute({ sql, args })).rows,
+      run: async (sql, args = []) => {
+        const r = await tx.execute({ sql, args });
+        return { lastInsertRowid: Number(r.lastInsertRowid ?? 0), changes: r.rowsAffected };
+      },
+    };
+    const out = await fn(scoped);
+    await tx.commit();
+    return out;
+  } catch (err) {
+    await tx.rollback();
+    throw err;
+  }
+}
 
 function newToken(bytes = 24) {
   return crypto.randomBytes(bytes).toString('hex');
 }
 
-module.exports = { db, newToken };
+module.exports = { dbGet, dbAll, dbRun, withTransaction, newToken };

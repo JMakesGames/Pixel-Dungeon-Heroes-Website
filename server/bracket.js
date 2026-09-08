@@ -1,4 +1,4 @@
-const { db } = require('./db');
+const { dbGet, dbAll, dbRun, withTransaction } = require('./db');
 const { computePlacements } = require('./points');
 
 function shuffle(arr) {
@@ -17,8 +17,8 @@ function nextPowerOf2(n) {
 }
 
 /** Builds round 1 (with byes auto-resolved) plus empty shells for every later round. */
-function generateBracket(tournamentId) {
-  const participants = db.prepare('SELECT id FROM participants WHERE tournament_id = ? ORDER BY id').all(tournamentId);
+async function generateBracket(tournamentId) {
+  const participants = await dbAll('SELECT id FROM participants WHERE tournament_id = ? ORDER BY id', [tournamentId]);
   if (participants.length < 2) throw new Error('Need at least 2 participants to start a bracket');
 
   const bracketSize = nextPowerOf2(participants.length);
@@ -35,79 +35,85 @@ function generateBracket(tournamentId) {
   ]);
 
   const totalRounds = Math.log2(bracketSize);
-  const insertMatch = db.prepare(`
-    INSERT INTO matches (tournament_id, round, slot, participant1_id, participant2_id, status)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
 
-  const tx = db.transaction(() => {
+  await withTransaction(async tx => {
     // Round 1
-    round1Matches.forEach(([p1, p2], slot) => {
+    for (let slot = 0; slot < round1Matches.length; slot++) {
+      const [p1, p2] = round1Matches[slot];
       const winner = p2 === null ? p1 : null; // p1 is never null by construction above
       const status = winner === null ? 'ready' : 'done';
-      insertMatch.run(tournamentId, 1, slot, p1, p2, status);
+      await tx.run(
+        'INSERT INTO matches (tournament_id, round, slot, participant1_id, participant2_id, status) VALUES (?, ?, ?, ?, ?, ?)',
+        [tournamentId, 1, slot, p1, p2, status]
+      );
       if (winner !== null) {
-        db.prepare('UPDATE matches SET winner_id = ? WHERE tournament_id = ? AND round = 1 AND slot = ?')
-          .run(winner, tournamentId, slot);
+        await tx.run(
+          'UPDATE matches SET winner_id = ? WHERE tournament_id = ? AND round = 1 AND slot = ?',
+          [winner, tournamentId, slot]
+        );
       }
-    });
+    }
     // Empty shells for every later round
     for (let round = 2; round <= totalRounds; round++) {
       const matchesInRound = bracketSize / Math.pow(2, round);
       for (let slot = 0; slot < matchesInRound; slot++) {
-        insertMatch.run(tournamentId, round, slot, null, null, 'pending');
+        await tx.run(
+          'INSERT INTO matches (tournament_id, round, slot, participant1_id, participant2_id, status) VALUES (?, ?, ?, ?, ?, ?)',
+          [tournamentId, round, slot, null, null, 'pending']
+        );
       }
     }
   });
-  tx();
 
   // Propagate any round-1 byes forward (may cascade into filling round 2 slots).
-  const round1Winners = db.prepare(
-    'SELECT id, slot, winner_id FROM matches WHERE tournament_id = ? AND round = 1 AND winner_id IS NOT NULL'
-  ).all(tournamentId);
-  for (const m of round1Winners) propagateWinner(tournamentId, 1, m.slot, m.winner_id);
+  const round1Winners = await dbAll(
+    'SELECT id, slot, winner_id FROM matches WHERE tournament_id = ? AND round = 1 AND winner_id IS NOT NULL',
+    [tournamentId]
+  );
+  for (const m of round1Winners) await propagateWinner(tournamentId, 1, m.slot, m.winner_id);
 
-  maybeCompleteTournament(tournamentId);
+  await maybeCompleteTournament(tournamentId);
 }
 
 /** Pushes a round's winner into the correct slot of the next round's match. */
-function propagateWinner(tournamentId, round, slot, winnerId) {
+async function propagateWinner(tournamentId, round, slot, winnerId) {
   const nextRound = round + 1;
   const nextSlot = Math.floor(slot / 2);
-  const nextMatch = db.prepare(
-    'SELECT * FROM matches WHERE tournament_id = ? AND round = ? AND slot = ?'
-  ).get(tournamentId, nextRound, nextSlot);
+  const nextMatch = await dbGet(
+    'SELECT * FROM matches WHERE tournament_id = ? AND round = ? AND slot = ?',
+    [tournamentId, nextRound, nextSlot]
+  );
   if (!nextMatch) return; // round was the final — nothing further to fill
 
   const field = slot % 2 === 0 ? 'participant1_id' : 'participant2_id';
-  db.prepare(`UPDATE matches SET ${field} = ? WHERE id = ?`).run(winnerId, nextMatch.id);
+  await dbRun(`UPDATE matches SET ${field} = ? WHERE id = ?`, [winnerId, nextMatch.id]);
 
-  const updated = db.prepare('SELECT * FROM matches WHERE id = ?').get(nextMatch.id);
+  const updated = await dbGet('SELECT * FROM matches WHERE id = ?', [nextMatch.id]);
   if (updated.participant1_id && updated.participant2_id) {
-    db.prepare('UPDATE matches SET status = ? WHERE id = ?').run('ready', nextMatch.id);
+    await dbRun('UPDATE matches SET status = ? WHERE id = ?', ['ready', nextMatch.id]);
   }
 }
 
-function setMatchWinner(matchId, winnerId) {
-  const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+async function setMatchWinner(matchId, winnerId) {
+  const match = await dbGet('SELECT * FROM matches WHERE id = ?', [matchId]);
   if (!match) throw new Error('Match not found');
   if (match.status !== 'ready') throw new Error('Match is not ready to be decided');
   if (winnerId !== match.participant1_id && winnerId !== match.participant2_id) {
     throw new Error('Winner must be one of the two match participants');
   }
-  db.prepare('UPDATE matches SET winner_id = ?, status = ? WHERE id = ?').run(winnerId, 'done', matchId);
-  propagateWinner(match.tournament_id, match.round, match.slot, winnerId);
-  maybeCompleteTournament(match.tournament_id);
+  await dbRun('UPDATE matches SET winner_id = ?, status = ? WHERE id = ?', [winnerId, 'done', matchId]);
+  await propagateWinner(match.tournament_id, match.round, match.slot, winnerId);
+  await maybeCompleteTournament(match.tournament_id);
 }
 
-function maybeCompleteTournament(tournamentId) {
-  const matches = db.prepare('SELECT * FROM matches WHERE tournament_id = ?').all(tournamentId);
+async function maybeCompleteTournament(tournamentId) {
+  const matches = await dbAll('SELECT * FROM matches WHERE tournament_id = ?', [tournamentId]);
   if (!matches.length) return;
   const maxRound = Math.max(...matches.map(m => m.round));
   const final = matches.find(m => m.round === maxRound);
   if (final && final.status === 'done') {
-    db.prepare('UPDATE tournaments SET status = ? WHERE id = ?').run('completed', tournamentId);
-    computePlacements(tournamentId);
+    await dbRun('UPDATE tournaments SET status = ? WHERE id = ?', ['completed', tournamentId]);
+    await computePlacements(tournamentId);
   }
 }
 
